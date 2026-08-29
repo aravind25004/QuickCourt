@@ -15,9 +15,7 @@ const facilitySchema = new mongoose.Schema({
       coordinates: { type: [Number], default: [0, 0] }
     }
   },
-  sports: [{ type: mongoose.Schema.Types.ObjectId, ref: "Sport" }],
   amenities: [{ type: String, trim: true }],
-  venueType: { type: String, enum: ["INDOOR", "OUTDOOR", "HYBRID"], required: true },
   photos: [{
     url: { type: String, required: true },
     publicId: { type: String, default: null }
@@ -44,4 +42,4 @@ facilitySchema.index({ venueType: 1 });
 facilitySchema.index({ "address.city": 1 });
 facilitySchema.index({ "address.location": "2dsphere" });
 
-export default mongoose.model("Facility", facilitySchema);
+export default mongoose.model("Facilities", facilitySchema);
