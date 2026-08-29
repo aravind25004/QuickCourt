@@ -25,7 +25,7 @@ export const venueService = {
   // GET /api/venues
   async getVenues(filters = {}) {
     const live = await apiClient('/venues', { params: filters });
-    if (live) return live;
+    if (live) return Array.isArray(live) ? live : (live.venues || live);
 
     const venues = getStoredVenues();
     // Return approved venues by default for players
@@ -35,7 +35,7 @@ export const venueService = {
   // GET /api/venues/:id
   async getVenueById(id) {
     const live = await apiClient(`/venues/${id}`);
-    if (live) return live;
+    if (live) return live.venue || live;
 
     const venues = getStoredVenues();
     return venues.find(v => v.id === id) || null;

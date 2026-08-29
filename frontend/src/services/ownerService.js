@@ -50,7 +50,7 @@ export const ownerService = {
   // GET /api/owner/facilities
   async getOwnerFacilities(ownerId = 'owner-1') {
     const live = await apiClient('/owner/facilities', { params: { ownerId } });
-    if (live) return live;
+    if (live) return Array.isArray(live) ? live : (live.facilities || live);
 
     const venues = await venueService.getVenues();
     return venues;

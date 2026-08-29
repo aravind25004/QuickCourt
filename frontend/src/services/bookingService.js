@@ -34,7 +34,7 @@ export const bookingService = {
   // GET /api/bookings
   async getBookings(filters = {}) {
     const live = await apiClient('/bookings', { params: filters });
-    if (live) return live;
+    if (live) return Array.isArray(live) ? live : (live.bookings || live);
 
     let list = getStoredBookings();
     if (filters.userId) {
@@ -49,7 +49,7 @@ export const bookingService = {
   // POST /api/bookings
   async createBooking(bookingData) {
     const live = await apiClient('/bookings', { method: 'POST', data: bookingData });
-    if (live) return live;
+    if (live) return live.booking || live;
 
     const bookings = getStoredBookings();
     const newBooking = {
@@ -88,7 +88,7 @@ export const bookingService = {
   // GET /api/courts/:courtId/blocked-slots
   async getBlockedSlots(venueId, date) {
     const live = await apiClient(`/venues/${venueId}/blocked-slots`, { params: { date } });
-    if (live) return live;
+    if (live) return Array.isArray(live) ? live : (live.blockedSlots || live);
 
     const blocked = getStoredBlockedSlots();
     return blocked.filter(b => (!venueId || b.venueId === venueId) && (!date || b.date === date));
