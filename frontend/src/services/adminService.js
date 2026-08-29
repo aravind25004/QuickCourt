@@ -156,7 +156,7 @@ export const adminService = {
   // GET /api/admin/pending-facilities
   async getPendingFacilities() {
     const live = await apiClient('/admin/pending-facilities');
-    if (live) return Array.isArray(live) ? live : (live.pendingFacilities || live);
+    if (live) return live;
 
     return getStoredPending();
   },
@@ -212,7 +212,7 @@ export const adminService = {
   // GET /api/admin/users
   async getAllUsers() {
     const live = await apiClient('/admin/users');
-    if (live) return Array.isArray(live) ? live : (live.users || live);
+    if (live) return live;
 
     return getStoredUsers();
   },
@@ -220,7 +220,7 @@ export const adminService = {
   // POST /api/admin/users/:id/toggle-ban
   async toggleUserBan(userId) {
     const live = await apiClient(`/admin/users/${userId}/toggle-ban`, { method: 'POST' });
-    if (live) return live.user || live;
+    if (live) return live;
 
     const users = getStoredUsers();
     const updated = users.map(u => {
@@ -237,7 +237,7 @@ export const adminService = {
   // GET /api/admin/reports
   async getReports() {
     const live = await apiClient('/admin/reports');
-    if (live) return Array.isArray(live) ? live : (live.reports || live);
+    if (live) return live;
 
     return getStoredReports();
   },
