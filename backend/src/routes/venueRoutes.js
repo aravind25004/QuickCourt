@@ -8,7 +8,7 @@ import {
   checkVenueBookingAuth,
   getBookingAvailability,
   createBooking
-} from "../controllers/venueController.js";
+} from "../controller/venueController.js";
 
 const router = express.Router();
 
