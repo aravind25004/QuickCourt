@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import app from "./app.js";
+import express from "express";
+import adminRoutes from "./routes/adminRoutes.js"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +21,9 @@ for (const envPath of envCandidates) {
     break;
   }
 }
+
+app.use(express.json());
+app.use("/api/facilities/",adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 
