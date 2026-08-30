@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import app from "./app.js";
 import express from "express";
 import adminRoutes from "./routes/adminRoutes.js"
+import facilityRoutes from "./routes/facilityRoutes"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +26,7 @@ for (const envPath of envCandidates) {
 app.use(express.json());
 app.use("/api/facilities/",adminRoutes);
 app.use("/api/users",)
+app.use("/api/facility", facilityRoutes);
 
 const PORT = process.env.PORT || 5000;
 
