@@ -6,3 +6,5 @@ const router = express.Router({ mergeParams: true });
 router.get("/",getAllActiveUsers);
 router.patch("/ban",banUser);
 router.get("/mybookings",getBookingHistory);
+
+export default router;

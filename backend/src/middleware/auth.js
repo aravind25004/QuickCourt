@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "quickcourt_super_secret_jwt_key_2026";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * Protect routes - requires a valid JWT Bearer token
