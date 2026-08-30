@@ -10,7 +10,7 @@ export async function approveFacility(req,res) {
     const facilityid = req.params.facilityid;
     const approve = req.params.approval;
     const comments = req.params.comments || "";
-    const facility = await Facilities.findOne(facilityid);
+    const facility = await Facilities.findById(facilityid);
     if(!facility){
         return res.status(404).json({message:"facility not found"})
     }
@@ -19,7 +19,7 @@ export async function approveFacility(req,res) {
     }
     const approvalStatus = facility.approvalStatus;
     if(approvalStatus!=="PENDING"){
-        res.status(400).json({message:"cannot approve or reject"});
+        return res.status(400).json({message:"cannot approve or reject"});
     }
     facility.approvalStatus = approve.toUpperCase();
     facility.rejectionReason = comments;
@@ -32,7 +32,7 @@ export async function approveFacility(req,res) {
 
 export async function getFacility(req,res) {
     const facilityid = req.params.facilityid;
-    const facility = await Facilities.findOne(facilityid);
+    const facility = await Facilities.findById(facilityid);
     if(!facility){
         return res.status(404).json({message:"facility not found"})
     }
