@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import Modal from '../common/Modal';
 import confetti from 'canvas-confetti';
+import {
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  openRazorpayCheckout
+} from '../../services/paymentService';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { 
   CreditCard, 
   Smartphone, 
@@ -11,7 +18,8 @@ import {
   Download, 
   ArrowRight,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 
 export default function PaymentModal({
@@ -20,9 +28,11 @@ export default function PaymentModal({
   bookingDetails,
   onBookingSuccess
 }) {
-  const [paymentMethod, setPaymentMethod] = useState('upi');
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState(null);
+  const [paymentError, setPaymentError] = useState(null);
 
   // Trigger celebration confetti
   const triggerConfetti = () => {
@@ -37,19 +47,61 @@ export default function PaymentModal({
     }
   };
 
-  const handlePay = () => {
+  const handlePay = async () => {
     setIsProcessing(true);
+    setPaymentError(null);
 
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
+      // Step 1: Create Razorpay order via backend
+      const orderData = await createRazorpayOrder({
+        venueName: bookingDetails?.venueName,
+        timeSlot: bookingDetails?.timeSlot,
+        court: bookingDetails?.courtId,
+        price: bookingDetails?.amount,
+        bookingDate: bookingDetails?.bookingDate
+      });
+
+      // Step 2: Open Razorpay Checkout popup
+      const paymentResponse = await openRazorpayCheckout({
+        keyId: orderData.keyId,
+        orderId: orderData.orderId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        venueName: bookingDetails?.venueName,
+        user: {
+          name: user?.name || user?.username || '',
+          email: user?.email || '',
+          phone: user?.phone || ''
+        }
+      });
+
+      // Step 3: Verify payment signature on backend
+      const verifyResult = await verifyRazorpayPayment({
+        razorpay_order_id: paymentResponse.razorpay_order_id,
+        razorpay_payment_id: paymentResponse.razorpay_payment_id,
+        razorpay_signature: paymentResponse.razorpay_signature
+      });
+
+      // Payment verified — create local booking record and show confirmation
       const confirmed = onBookingSuccess();
       setConfirmedBooking(confirmed);
       triggerConfetti();
-    }, 1200);
+      showToast('Payment successful! Your court is reserved.', 'success');
+    } catch (error) {
+      const errorMsg = error.message || 'Payment failed. Please try again.';
+      setPaymentError(errorMsg);
+
+      if (error.message !== 'Payment cancelled by user') {
+        showToast(errorMsg, 'error');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleFinish = (targetPage = 'profile') => {
     setConfirmedBooking(null);
+    setPaymentError(null);
     onClose(targetPage);
   };
 
@@ -141,100 +193,81 @@ export default function PaymentModal({
             </div>
           </div>
 
-          {/* Payment Method Selector */}
-          <div className="payment-methods-grid">
-            <button
-              type="button"
-              className={`method-tile ${paymentMethod === 'upi' ? 'selected' : ''}`}
-              onClick={() => setPaymentMethod('upi')}
-            >
-              <Smartphone size={20} className="method-icon" />
-              <span>Instant UPI / QR</span>
-              <span className="method-sub">GPay, PhonePe, Paytm</span>
-            </button>
+          {/* Razorpay handles payment method selection in its own popup */}
+          <div className="razorpay-info-box flex-col items-center gap-sm">
+            <ShieldCheck size={32} color="#10B981" />
+            <p style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+              Secure Payment via Razorpay
+            </p>
+            <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: 0, textAlign: 'center' }}>
+              You'll be redirected to Razorpay's secure checkout to complete your payment via UPI, Card, Net Banking, or Wallet.
+            </p>
+          </div>
 
-            <button
-              type="button"
-              className={`method-tile ${paymentMethod === 'card' ? 'selected' : ''}`}
-              onClick={() => setPaymentMethod('card')}
-            >
+          {/* Payment Method Preview Icons */}
+          <div className="payment-methods-grid">
+            <div className="method-tile selected">
+              <Smartphone size={20} className="method-icon" />
+              <span>UPI / QR</span>
+              <span className="method-sub">GPay, PhonePe, Paytm</span>
+            </div>
+
+            <div className="method-tile selected">
               <CreditCard size={20} className="method-icon" />
               <span>Debit / Credit Card</span>
               <span className="method-sub">Visa, MasterCard, RuPay</span>
-            </button>
+            </div>
 
-            <button
-              type="button"
-              className={`method-tile ${paymentMethod === 'netbanking' ? 'selected' : ''}`}
-              onClick={() => setPaymentMethod('netbanking')}
-            >
+            <div className="method-tile selected">
               <Building size={20} className="method-icon" />
               <span>Net Banking</span>
               <span className="method-sub">HDFC, ICICI, SBI, Axis</span>
-            </button>
+            </div>
 
-            <button
-              type="button"
-              className={`method-tile ${paymentMethod === 'venue' ? 'selected' : ''}`}
-              onClick={() => setPaymentMethod('venue')}
-            >
+            <div className="method-tile selected">
               <Sparkles size={20} className="method-icon" />
-              <span>Pay at Venue</span>
-              <span className="method-sub">Cash / UPI on arrival</span>
-            </button>
+              <span>Wallets</span>
+              <span className="method-sub">Paytm, Freecharge, Jio</span>
+            </div>
           </div>
 
-          {/* Method Specific Inputs */}
-          {paymentMethod === 'upi' && (
-            <div className="upi-details-box flex-col items-center">
-              <div className="qr-code-placeholder flex-col items-center justify-center">
-                <QrCode size={96} color="#10B981" />
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 6 }}>
-                  Scan & Pay ₹{bookingDetails?.amount} using any UPI App
-                </span>
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#64748b', margin: '8px 0' }}>or enter UPI ID</div>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="e.g. yourname@oksbi" 
-                defaultValue="mitchell@okhdfcbank"
-              />
-            </div>
-          )}
-
-          {paymentMethod === 'card' && (
-            <div className="card-details-box flex-col gap-sm">
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Card Number</label>
-                <input type="text" className="form-input" placeholder="4532 •••• •••• 8842" defaultValue="4532 9081 2234 8842" />
-              </div>
-              <div className="flex gap-sm">
-                <div className="form-group" style={{ flex: 1, margin: 0 }}>
-                  <label className="form-label">Expiry</label>
-                  <input type="text" className="form-input" placeholder="MM/YY" defaultValue="08/28" />
-                </div>
-                <div className="form-group" style={{ flex: 1, margin: 0 }}>
-                  <label className="form-label">CVV</label>
-                  <input type="password" className="form-input" placeholder="123" defaultValue="789" />
-                </div>
-              </div>
+          {/* Error Display */}
+          {paymentError && (
+            <div className="payment-error-box">
+              <span>⚠️ {paymentError}</span>
+              <button 
+                type="button" 
+                className="dismiss-error-btn"
+                onClick={() => setPaymentError(null)}
+              >
+                ✕
+              </button>
             </div>
           )}
 
           <div className="security-notice flex items-center gap-sm">
             <ShieldCheck size={16} color="#10B981" />
-            <span>256-Bit SSL Encrypted & Protected by QuickCourt Buyer Shield</span>
+            <span>256-Bit SSL Encrypted & Protected by Razorpay Buyer Shield</span>
           </div>
 
-          {/* Pay Button matching SVG "Continue to Payment – ₹..." */}
+          {/* Pay Button — opens Razorpay Checkout */}
           <button 
             type="button" 
             className="btn btn-primary btn-lg pay-submit-btn"
             disabled={isProcessing}
             onClick={handlePay}
           >
-            {isProcessing ? 'Processing Payment...' : `Confirm & Pay – ₹${bookingDetails?.amount}.00`}
+            {isProcessing ? (
+              <>
+                <Loader2 size={18} className="spin-icon" />
+                <span>Processing Payment...</span>
+              </>
+            ) : (
+              <>
+                <CreditCard size={18} />
+                <span>Confirm & Pay – ₹{bookingDetails?.amount}.00</span>
+              </>
+            )}
           </button>
 
         </div>
@@ -259,6 +292,14 @@ export default function PaymentModal({
           border-radius: var(--radius-full);
         }
 
+        .razorpay-info-box {
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          border-radius: var(--radius-md);
+          padding: 20px;
+          display: flex;
+        }
+
         .payment-methods-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -280,15 +321,9 @@ export default function PaymentModal({
           transition: all 0.2s ease;
         }
 
-        .method-tile:hover {
-          background: var(--bg-card-hover);
-          border-color: rgba(16, 185, 129, 0.3);
-        }
-
         .method-tile.selected {
-          background: rgba(16, 185, 129, 0.15);
-          border-color: var(--primary);
-          color: #ffffff;
+          background: rgba(16, 185, 129, 0.08);
+          border-color: rgba(16, 185, 129, 0.25);
         }
 
         .method-icon {
@@ -303,24 +338,25 @@ export default function PaymentModal({
           margin-top: 2px;
         }
 
-        .upi-details-box {
-          background: rgba(15, 23, 42, 0.5);
-          border: 1px dashed var(--border-subtle);
+        .payment-error-box {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: rgba(239, 68, 68, 0.12);
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          color: #fca5a5;
+          padding: 10px 14px;
           border-radius: var(--radius-md);
-          padding: 16px;
+          font-size: 0.85rem;
         }
 
-        .qr-code-placeholder {
-          background: rgba(255, 255, 255, 0.05);
-          padding: 16px;
-          border-radius: var(--radius-md);
-        }
-
-        .card-details-box {
-          background: rgba(15, 23, 42, 0.5);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          padding: 16px;
+        .dismiss-error-btn {
+          background: none;
+          border: none;
+          color: #fca5a5;
+          font-size: 1rem;
+          cursor: pointer;
+          padding: 0 4px;
         }
 
         .security-notice {
@@ -333,6 +369,15 @@ export default function PaymentModal({
           width: 100%;
           font-size: 1.1rem;
           padding: 16px;
+        }
+
+        .spin-icon {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .confirmation-screen {

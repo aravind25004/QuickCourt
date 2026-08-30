@@ -1,14 +1,16 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+//import path from "node:path";
+//import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import express from "express";
+import cors from "cors";
 import adminRoutes from "./routes/adminRoutes.js"
 import facilityRoutes from "./routes/facilityRoutes.js"
 import usersRoute from "./routes/usersRoutes.js"
 import userRoute from "./routes/userRoutes.js"
 import venueRoutes from "./routes/venueRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 
 dotenv.config();
@@ -31,6 +33,7 @@ dotenv.config();
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use("/api/auth",authRoutes);
 app.use("/api/facilities",adminRoutes);
@@ -38,6 +41,7 @@ app.use("/api/users",usersRoute)
 app.use("/api/facility", facilityRoutes);
 app.use("/api/user",userRoute);
 app.use("/api/venues", venueRoutes);
+app.use("/api/payment", paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 

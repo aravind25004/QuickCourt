@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   facility: { type: mongoose.Schema.Types.ObjectId, ref: "Facilities", required: true },
   court: { type: mongoose.Schema.Types.ObjectId, ref: "Court", required: true },
   bookingDate: { type: Date, required: true },
@@ -10,14 +10,18 @@ const bookingSchema = new mongoose.Schema({
   totalAmount: { type: Number, required: true, min: 0 },
   status: {
     type: String,
-    enum: ["CONFIRMED", "CANCELLED", "COMPLETED"],
-    default: "CONFIRMED"
+    enum: ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"],
+    default: "PENDING"
   },
   cancellationReason: { type: String, default: null },
   cancelledAt: { type: Date, default: null },
   cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-  payment: { type: mongoose.Schema.Types.ObjectId, ref: "Payment", default: null }
+  payment: { type: mongoose.Schema.Types.ObjectId, ref: "Payment", default: null },
+  razorpayOrderId: { type: String, default: null },
+  razorpayPaymentId: { type: String, default: null },
+  razorpaySignature: { type: String, default: null }
 }, { timestamps: true });
+
 
 bookingSchema.index({ user: 1 });
 bookingSchema.index({ facility: 1 });

@@ -429,7 +429,9 @@ export default function BookingPage({ venueId, onBack, onNavigatePage }) {
         bookingDetails={{
           venueName: venue.name,
           courtName: selectedCourt.name,
+          courtId: selectedCourt.id,
           formattedDate,
+          bookingDate: selectedDate,
           timeSlot: selectedSlot,
           amount: totalAmount,
           location: venue.area
