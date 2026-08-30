@@ -24,6 +24,7 @@ for (const envPath of envCandidates) {
 
 app.use(express.json());
 app.use("/api/facilities/",adminRoutes);
+app.use("/api/users",)
 
 const PORT = process.env.PORT || 5000;
 
