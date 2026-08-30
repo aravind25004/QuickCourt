@@ -1,5 +1,5 @@
 import express from "express";
-import { banUser, getAllActiveUsers, getBookingHistory } from "../controller/usersController";
+import { banUser, getAllActiveUsers, getBookingHistory } from "../controller/usersController.js";
 
 const router = express.Router({ mergeParams: true });
 

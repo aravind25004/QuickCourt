@@ -1,6 +1,6 @@
 import express from "express";
-import Bookings from "../models/Bookings";
-import User from "../models/User";
+import Bookings from "../models/Bookings.js";
+import User from "../models/User.js";
 
 export async function getActiveBookings(req,res) {
     const userid = req.userId;

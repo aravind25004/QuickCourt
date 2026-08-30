@@ -9,9 +9,8 @@ import {
   updateCourt,
   deleteCourt,
   getFacilityBookings
-} from "../controllers/facilityController.js";
-
-import authMiddleware from "../middleware/authMiddleware.js";
+} from "../controller/facilityController.js";
+import authMiddleware from "../middleware/auth.js";
 
 const router = express.Router();
 

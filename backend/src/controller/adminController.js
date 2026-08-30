@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Facilities from "../models/Facilities";
+import Facilities from "../models/Facilities.js";
 
 export async function getAllFacilities(req,res) {
     const facilities = await Facilities.find();

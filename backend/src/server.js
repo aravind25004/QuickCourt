@@ -2,12 +2,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import app from "./app.js";
 import express from "express";
 import adminRoutes from "./routes/adminRoutes.js"
-import facilityRoutes from "./routes/facilityRoutes"
+import facilityRoutes from "./routes/facilityRoutes.js"
 import usersRoute from "./routes/usersRoutes.js"
 import userRoute from "./routes/userRoutes.js"
+import venueRoutes from "./routes/venueRoutes.js";
+
+
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,11 +28,14 @@ for (const envPath of envCandidates) {
   }
 }
 
+const app = express();
+
 app.use(express.json());
 app.use("/api/facilities/",adminRoutes);
 app.use("/api/users",usersRoute)
 app.use("/api/facility", facilityRoutes);
 app.use("/api/user",userRoute);
+app.use("/api/venues", venueRoutes);
 
 const PORT = process.env.PORT || 5000;
 
